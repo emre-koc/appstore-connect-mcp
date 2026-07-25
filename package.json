@@ -1,0 +1,61 @@
+{
+  "name": "@emre-koc/appstore-connect-mcp",
+  "version": "0.1.0",
+  "description": "Secure, local-only stdio MCP server for the App Store Connect API",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "appstore-connect-mcp": "dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "SECURITY.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json && node scripts/set-executable.mjs",
+    "check": "tsc -p tsconfig.json --noEmit",
+    "test": "node --import tsx --test tests/**/*.test.ts",
+    "test:dist": "node scripts/dist-smoke.mjs",
+    "test:coverage": "node --import tsx --experimental-test-coverage --test tests/**/*.test.ts",
+    "prepack": "npm run check && npm test && npm run build"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.29.0",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "26.1.1",
+    "tsx": "4.23.1",
+    "typescript": "7.0.2"
+  },
+  "overrides": {
+    "@hono/node-server": "2.0.11"
+  },
+  "license": "MIT",
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/emre-koc/appstore-connect-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/emre-koc/appstore-connect-mcp/issues"
+  },
+  "homepage": "https://github.com/emre-koc/appstore-connect-mcp#readme",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "keywords": [
+    "app-store-connect",
+    "mcp",
+    "model-context-protocol",
+    "stdio",
+    "apple"
+  ]
+}

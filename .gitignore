@@ -1,0 +1,11 @@
+node_modules/
+dist/
+coverage/
+.env
+.env.*
+!.env.example
+*.p8
+AuthKey_*.p8
+.DS_Store
+*.log
+.npm/
