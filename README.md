@@ -1,5 +1,8 @@
 # App Store Connect MCP
 
+[![npm version](https://img.shields.io/npm/v/@emre-koc/appstore-connect-mcp)](https://www.npmjs.com/package/@emre-koc/appstore-connect-mcp)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 A secure, local-only Model Context Protocol server for Apple's App Store Connect API.
 
 - **Transport:** stdio only — no HTTP listener, OAuth, Auth0, telemetry, or hosted relay.
@@ -11,13 +14,42 @@ A secure, local-only Model Context Protocol server for Apple's App Store Connect
 
 > This project is independent and is not affiliated with or endorsed by Apple Inc.
 
+## Quick start
+
+```bash
+# Install globally
+npm install -g @emre-koc/appstore-connect-mcp
+
+# Or run without installing
+npx @emre-koc/appstore-connect-mcp --env-file=~/.config/appstore-connect-mcp/env
+```
+
+List your apps (safe read-only call — no mutations):
+
+```bash
+npx @emre-koc/appstore-connect-mcp --env-file=~/.config/appstore-connect-mcp/env \
+  --tool=list_apps
+```
+
 ## Requirements
 
 - Node.js 22 or newer
 - An App Store Connect API key with only the role needed for the tools you intend to use
 - The original `.p8` private key downloaded from App Store Connect
 
-## Install
+## Security first
+
+This server can access unpublished app data and, when explicitly enabled, change App Store Connect resources. Before using it:
+
+- create a dedicated, least-privileged App Store Connect API key;
+- keep the `.p8` key outside the repository with exact mode `600`;
+- configure `ASC_ALLOWED_APP_IDS` even for read-only use;
+- leave `ASC_ENABLE_MUTATIONS=false` unless performing a planned change;
+- review the [threat model](docs/THREAT-MODEL.md) and [security policy](SECURITY.md).
+
+No App Store Connect credentials are needed to build or run the test suite.
+
+## Install from source
 
 ```bash
 git clone https://github.com/emre-koc/appstore-connect-mcp.git
@@ -49,7 +81,7 @@ Required variables:
 ```dotenv
 ASC_KEY_ID=YOUR_KEY_ID
 ASC_ISSUER_ID=YOUR_ISSUER_ID
-ASC_PRIVATE_KEY_PATH=/Users/YOU/.config/appstore-connect-mcp/AuthKey_YOUR_KEY_ID.p8
+ASC_PRIVATE_KEY_PATH=/absolute/path/to/AuthKey_YOUR_KEY_ID.p8
 ```
 
 Recommended read-only app scoping:
@@ -63,15 +95,15 @@ ASC_ENABLE_MUTATIONS=false
 
 ## Hermes configuration
 
-Use Node's built-in `--env-file` support so credentials stay out of Hermes YAML:
+Use Node's built-in `--env-file` support so credentials stay out of Hermes YAML. Resolve both paths locally with `command -v node` and `pwd`; MCP client configuration requires absolute paths and does not expand `~`:
 
 ```yaml
 mcp_servers:
   appstore_connect:
-    command: "/opt/homebrew/bin/node"
+    command: "/absolute/path/to/node"
     args:
-      - "--env-file=/Users/YOU/.config/appstore-connect-mcp/env"
-      - "/Users/YOU/Documents/Github/appstore-connect-mcp/dist/index.js"
+      - "--env-file=/absolute/path/to/appstore-connect-mcp-env"
+      - "/absolute/path/to/appstore-connect-mcp/dist/index.js"
     connect_timeout: 30
     timeout: 120
     sampling:
@@ -79,6 +111,17 @@ mcp_servers:
 ```
 
 Restart Hermes after adding the configuration. Tools appear with the `mcp_appstore_connect_` prefix.
+
+## Configuration reference
+
+| Variable | Required | Purpose |
+|---|---:|---|
+| `ASC_KEY_ID` | Yes | App Store Connect API key ID |
+| `ASC_ISSUER_ID` | Yes | App Store Connect API issuer ID |
+| `ASC_PRIVATE_KEY_PATH` | Yes | Absolute path to the mode-`600` `.p8` key file |
+| `ASC_ALLOWED_APP_IDS` | Recommended | Comma-separated App Store Connect app resource IDs; mandatory for mutations |
+| `ASC_ENABLE_MUTATIONS` | No | Defaults to disabled; only the exact string `true` enables writes |
+| `ASC_VENDOR_NUMBER` | No | Reserved for future sales/finance report tools |
 
 ## Mutation safety
 

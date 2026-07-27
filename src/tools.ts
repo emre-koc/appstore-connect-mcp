@@ -1,6 +1,8 @@
 import type { AppStoreConnectConfig } from "./config.js";
 import type { JsonApiDocument, JsonApiResource, Query } from "./client.js";
 import { assertAllowedApp, assertMutationAllowed } from "./security.js";
+import { readFileSync, statSync } from "fs";
+import { createHash } from "crypto";
 
 export interface AppStoreConnectClientLike {
   get(path: string, query?: Query): Promise<JsonApiDocument<any>>;
@@ -405,6 +407,68 @@ export class AppStoreConnectTools {
     return this.client.patch(`/v1/reviewSubmissions/${args.reviewSubmissionId}`, {
       data: { type: "reviewSubmissions", id: args.reviewSubmissionId, attributes: { submitted: true } },
     });
+  }
+
+  // ── Screenshot upload ──
+
+  async createAppScreenshotSet(args: MutationBase & {
+    versionLocalizationId: string;
+    screenshotDisplayType: string;
+  }): Promise<JsonApiDocument> {
+    this.authorizeMutation("create_app_screenshot_set", args);
+    await this.client.get(`/v1/appStoreVersionLocalizations/${args.versionLocalizationId}`);
+    return this.client.post("/v1/appScreenshotSets", {
+      data: {
+        type: "appScreenshotSets",
+        attributes: { screenshotDisplayType: args.screenshotDisplayType },
+        relationships: {
+          appStoreVersionLocalization: { data: { type: "appStoreVersionLocalizations", id: args.versionLocalizationId } },
+        },
+      },
+    });
+  }
+
+  async uploadAppScreenshot(args: MutationBase & {
+    screenshotSetId: string;
+    filePath: string;
+  }): Promise<Record<string, unknown>> {
+    this.authorizeMutation("upload_app_screenshot", args);
+
+    const fileBuffer = readFileSync(args.filePath);
+    const fileSize = statSync(args.filePath).size;
+    const fileName = args.filePath.split("/").pop() ?? "screenshot.png";
+
+    // 1. Reserve
+    const reserve: any = await this.client.post("/v1/appScreenshots", {
+      data: {
+        type: "appScreenshots",
+        attributes: { fileName, fileSize },
+        relationships: { appScreenshotSet: { data: { type: "appScreenshotSets", id: args.screenshotSetId } } },
+      },
+    });
+
+    const shotId: string = reserve.data.id;
+    const ops = reserve.data.attributes?.uploadOperations;
+    if (!ops?.length) throw new Error("No upload operations returned for screenshot reservation");
+    const op = ops[0];
+
+    // 2. Upload the file to Apple's upload service
+    const uploadHeaders: Record<string, string> = { "Content-Type": "image/png" };
+    for (const h of (op.requestHeaders || [])) uploadHeaders[h.name] = h.value;
+
+    const uploadRes = await fetch(op.url, { method: op.method, headers: uploadHeaders, body: fileBuffer });
+    if (!uploadRes.ok) {
+      const body = await uploadRes.text().catch(() => "");
+      throw new Error(`Screenshot file upload failed (${uploadRes.status}): ${body.slice(0, 200)}`);
+    }
+
+    // 3. Commit
+    const checksum = createHash("md5").update(fileBuffer).digest("hex");
+    await this.client.patch(`/v1/appScreenshots/${shotId}`, {
+      data: { type: "appScreenshots", id: shotId, attributes: { uploaded: true, sourceFileChecksum: checksum } },
+    });
+
+    return { screenshotId: shotId, fileName };
   }
 
   private assertApp(appId: string): void {

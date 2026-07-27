@@ -219,5 +219,16 @@ export function createMcpServer(tools: AppStoreConnectTools): McpServer {
     inputSchema: { appId, reviewSubmissionId: resourceId, confirmation }, annotations: destructiveAnnotations,
   }, safeHandler((args) => tools.submitReviewSubmission(args)));
 
+  const screenshotDisplayTypes = z.string().min(3).max(50).describe("Apple screenshot display type, e.g. APP_IPHONE_65, APP_IPHONE_67");
+  server.registerTool("create_app_screenshot_set", {
+    description: "Create an App Store screenshot set for a version localization. Requires exact confirmation EXECUTE create_app_screenshot_set FOR <appId>.",
+    inputSchema: { appId, versionLocalizationId: resourceId, screenshotDisplayType: screenshotDisplayTypes, confirmation }, annotations: writeAnnotations,
+  }, safeHandler((args) => tools.createAppScreenshotSet(args)));
+
+  server.registerTool("upload_app_screenshot", {
+    description: "Upload a screenshot file to an existing screenshot set, performing reserve → upload → commit. Requires exact confirmation EXECUTE upload_app_screenshot FOR <appId>. filePath must be an absolute path to a PNG file accessible to the MCP server process.",
+    inputSchema: { appId, screenshotSetId: resourceId, filePath: z.string().min(1).describe("Absolute path to the PNG screenshot file"), confirmation }, annotations: writeAnnotations,
+  }, safeHandler((args) => tools.uploadAppScreenshot(args)));
+
   return server;
 }
