@@ -48,8 +48,7 @@
   },
   "homepage": "https://github.com/emre-koc/appstore-connect-mcp#readme",
   "publishConfig": {
-    "access": "public",
-    "provenance": true
+    "access": "public"
   },
   "keywords": [
     "app-store-connect",
