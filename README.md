@@ -112,6 +112,70 @@ mcp_servers:
 
 Restart Hermes after adding the configuration. Tools appear with the `mcp_appstore_connect_` prefix.
 
+## Claude Code
+
+```bash
+claude mcp add appstore-connect -- node --env-file=~/.config/appstore-connect-mcp/env dist/index.js
+```
+
+Or add directly to `~/.claude.json` or `.claude/settings.json`:
+
+```json
+{
+  "mcpServers": {
+    "appstore-connect": {
+      "command": "node",
+      "args": [
+        "--env-file=/absolute/path/to/env",
+        "/absolute/path/to/appstore-connect-mcp/dist/index.js"
+      ]
+    }
+  }
+}
+```
+
+Restart Claude Code or run `/mcp` to verify the server loaded. Tools appear without a prefix — use them directly in conversation.
+
+## Codex CLI
+
+```bash
+codex mcp add -s user appstore-connect -- node --env-file=~/.config/appstore-connect-mcp/env dist/index.js
+```
+
+Or in `~/.codex/config.toml`:
+
+```toml
+[mcp_servers.appstore-connect]
+command = "node"
+args = ["--env-file=/absolute/path/to/env", "/absolute/path/to/appstore-connect-mcp/dist/index.js"]
+```
+
+Restart Codex after adding. Tools appear as `mcp__appstore_connect__<tool_name>`.
+
+## OpenCode
+
+```bash
+opencode mcp add appstore-connect -- node --env-file=~/.config/appstore-connect-mcp/env dist/index.js
+```
+
+Or in `~/.config/opencode/config.json`:
+
+```json
+{
+  "mcpServers": {
+    "appstore-connect": {
+      "command": "node",
+      "args": [
+        "--env-file=/absolute/path/to/env",
+        "/absolute/path/to/appstore-connect-mcp/dist/index.js"
+      ]
+    }
+  }
+}
+```
+
+Restart OpenCode or switch sessions. Tools are available as regular MCP tools.
+
 ## Configuration reference
 
 | Variable | Required | Purpose |
