@@ -16,13 +16,21 @@ A secure, local-only Model Context Protocol server for Apple's App Store Connect
 
 ## Quick start
 
-```bash
-# Install globally
-npm install -g @emre-koc/appstore-connect-mcp
+**One-command installer** (auto-detects your coding agent):
 
-# Or run without installing
+```bash
+curl -fsSL https://raw.githubusercontent.com/emre-koc/appstore-connect-mcp/main/install.sh | bash
+```
+
+**Manual install:**
+
+```bash
+npm install -g @emre-koc/appstore-connect-mcp
+# or
 npx @emre-koc/appstore-connect-mcp --env-file=~/.config/appstore-connect-mcp/env
 ```
+
+**Agent setup:** [Hermes](#hermes-configuration) · [Claude Code](#claude-code) · [Codex CLI](#codex-cli) · [OpenCode](#opencode)
 
 List your apps (safe read-only call — no mutations):
 
